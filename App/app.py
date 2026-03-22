@@ -1,5 +1,6 @@
 import os, sys
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "5,6,7"
 sys.path.append("..")
 sys.path.append("/".join(os.path.abspath(__file__).split("/")[:-1]))
 sys.path.append("/".join(os.path.abspath(__file__).split("/")[:-2]))
@@ -34,8 +35,8 @@ def load_model(config, device):
     text2cad.eval()
     return text2cad
 
+
 def test_model(model, text, config, device):
-    
     if not isinstance(text, list):
         text = [text]
     pred_cad_seq_dict = model.test_decode(
@@ -54,7 +55,9 @@ def test_model(model, text, config, device):
 
         return pred_cad.mesh, pred_cad
     except Exception as e:
+        print(Exception)
         return None
+
 
 def parse_config_file(config_file):
     with open(config_file, "r") as file:
@@ -62,18 +65,17 @@ def parse_config_file(config_file):
     return yaml_data
 
 
-
 config_path = "../Cad_VLM/config/inference_user_input.yaml"
 config = parse_config_file(config_path)
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 model = load_model(config, device)
-OUTPUT_DIR="output"
+OUTPUT_DIR = "output"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
 def genrate_cad_model_from_text(text):
     global model, config
-    mesh,*extra = test_model(model=model, text=text, config=config, device=device)
+    mesh, *extra = test_model(model=model, text=text, config=config, device=device)
     if mesh is not None:
         output_path = os.path.join(OUTPUT_DIR, "output.stl")
         mesh.export(output_path)
@@ -117,8 +119,8 @@ demo = gr.Interface(
     examples=examples,
     title=title,
     description=description,
-    theme=gr.themes.Soft(), 
+    theme=gr.themes.Soft(),
 )
 
 if __name__ == "__main__":
-    demo.launch(share=True)
+    demo.launch(server_name="0.0.0.0", share=False, server_port=7860, show_api=False)
